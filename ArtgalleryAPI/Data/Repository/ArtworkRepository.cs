@@ -34,17 +34,8 @@ namespace ArtGalleryAPI.Repositories
 
         public async Task UpdateAsync(Artwork artwork)
         {
-            _context.Entry(artwork).Property("RowVersion").OriginalValue = artwork.RowVersion;
             _context.Entry(artwork).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                throw;
-            }
+            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)

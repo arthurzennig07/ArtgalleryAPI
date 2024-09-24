@@ -1,5 +1,6 @@
 using ArtGalleryAPI.Data;
 using ArtgalleryAPI.Data.Repository;
+using ArtGalleryAPI.Middleware;
 using ArtGalleryAPI.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,6 +30,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 

@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace ArtGalleryAPI.Models
 {
@@ -44,7 +45,5 @@ namespace ArtGalleryAPI.Models
 
         public int Stock { get; set; }
         
-        [Timestamp]
-        public byte[] RowVersion { get; set; }
     }
 }
