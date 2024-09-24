@@ -45,5 +45,6 @@ namespace ArtGalleryAPI.Models
 
         public int Stock { get; set; }
         
+        public int PosterStockQty { get; set; }
     }
 }

@@ -2,6 +2,7 @@ using ArtGalleryAPI.Data;
 using ArtgalleryAPI.Data.Repository;
 using ArtGalleryAPI.Middleware;
 using ArtGalleryAPI.Repositories;
+using ArtGalleryAPI.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +16,7 @@ builder.Services.AddDbContext<ArtGalleryContext>(options =>
 
 //Dependecy Injections
 builder.Services.AddScoped<IArtworkRepository, ArtworkRepository>();
+builder.Services.AddScoped<IArtworkService, ArtworkService>();
 
 // Add Swagger for API documentation
 builder.Services.AddEndpointsApiExplorer();
