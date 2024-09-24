@@ -4,6 +4,7 @@ using ArtgalleryAPI.Data.Repository;
 using Microsoft.AspNetCore.Mvc;
 using ArtGalleryAPI.Models;
 using ArtGalleryAPI.Repositories;
+using ArtGalleryAPI.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace ArtGalleryAPI.Controllers
@@ -12,18 +13,18 @@ namespace ArtGalleryAPI.Controllers
     [ApiController]
     public class ArtworksController : ControllerBase
     {
-        private readonly IArtworkRepository _repository;
+        private readonly IArtworkService _artworkService;
 
-        public ArtworksController(IArtworkRepository repository)
+        public ArtworksController(IArtworkService artworkService)
         {
-            _repository = repository;
+            _artworkService = artworkService;
         }
 
         // GET: api/artworks
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Artwork>>> GetArtworks()
         {
-            var artworks = await _repository.GetAllAsync();
+            var artworks = await _artworkService.GetAllArtworksAsync();
             return Ok(artworks);
         }
 
@@ -31,7 +32,7 @@ namespace ArtGalleryAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Artwork>> GetArtwork(int id)
         {
-            var artwork = await _repository.GetByIdAsync(id);
+            var artwork = await _artworkService.GetArtworkByIdAsync(id);
 
             if (artwork == null)
             {
@@ -45,7 +46,7 @@ namespace ArtGalleryAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Artwork>> PostArtwork(Artwork artwork)
         {
-            await _repository.AddAsync(artwork);
+            await _artworkService.AddArtworkAsync(artwork);
             return CreatedAtAction(nameof(GetArtwork), new { id = artwork.Id }, artwork);
         }
 
@@ -60,11 +61,11 @@ namespace ArtGalleryAPI.Controllers
 
             try
             {
-                await _repository.UpdateAsync(artwork);
+                await _artworkService.UpdateArtworkAsync(artwork);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!await _repository.ArtworkExistsAsync(id))
+                if (!await _artworkService.ArtworkExistsAsync(id))
                 {
                     return NotFound();
                 }
@@ -81,51 +82,66 @@ namespace ArtGalleryAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteArtwork(int id)
         {
-            var artwork = await _repository.GetByIdAsync(id);
+            var artwork = await _artworkService.ArtworkExistsAsync(id);
             if (artwork == null)
             {
                 return NotFound();
             }
 
-            await _repository.DeleteAsync(id);
+            await _artworkService.DeleteArtworkAsync(id);
             return NoContent();
         }
 
         // POST: api/artworks/{id}/stock
         [HttpPost("{id}/stock")]
-        public async Task<IActionResult> AddStock(int id, [FromBody] int quantity)
+        public async Task<IActionResult> AddStock(int id, [FromBody] StockChangeRequest request)
         {
-            var artwork = await _repository.GetByIdAsync(id);
-            if (artwork == null)
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                await _artworkService.AddStockAsync(id, request);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }
-
-            artwork.Stock += quantity;
-            await _repository.UpdateAsync(artwork);
-
-            return NoContent();
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // DELETE: api/artworks/{id}/stock
         [HttpDelete("{id}/stock")]
-        public async Task<IActionResult> RemoveStock(int id, [FromBody] int quantity)
+        public async Task<IActionResult> RemoveStock(int id, [FromBody] StockChangeRequest request)
         {
-            var artwork = await _repository.GetByIdAsync(id);
-            if (artwork == null)
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                await _artworkService.RemoveStockAsync(id, request);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }
-
-            artwork.Stock -= quantity;
-            if (artwork.Stock < 0)
+            catch (InvalidOperationException ex)
             {
-                return BadRequest("Insufficient stock.");
+                return BadRequest(ex.Message);
             }
-
-            await _repository.UpdateAsync(artwork);
-
-            return NoContent();
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }
